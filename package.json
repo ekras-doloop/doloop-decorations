@@ -2,7 +2,7 @@
   "name": "doloop-decorations",
   "displayName": "doloop decorations",
   "description": "Paint doloop's where-to-look gaze on the open file: beacon signatures, muscle decisions, the rest dimmed. Deterministic, local, non-invasive (decorates, never modifies).",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "doloop",
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/ekras-doloop/doloop-decorations" },
@@ -15,7 +15,7 @@
       { "command": "doloop.refreshGaze", "title": "doloop: Refresh gaze (reload .doloop/gaze.json)" },
       { "command": "doloop.toggleGaze", "title": "doloop: Toggle gaze on/off" },
       { "command": "doloop.jumpTo", "title": "doloop: Jump to" },
-      { "command": "doloop.playGaze", "title": "doloop: Play the gaze (the structural scan path)", "icon": "$(play)" },
+      { "command": "doloop.playGaze", "title": "doloop: Play the gaze (the expert's scan path)", "icon": "$(play)" },
       { "command": "doloop.stopGaze", "title": "doloop: Stop the gaze", "icon": "$(debug-stop)" },
       { "command": "doloop.prevFixation", "title": "doloop: Previous fixation", "icon": "$(chevron-left)" },
       { "command": "doloop.nextFixation", "title": "doloop: Next fixation", "icon": "$(chevron-right)" },
@@ -48,7 +48,7 @@
       {
         "id": "doloopGettingStarted",
         "title": "Get started with doloop",
-        "description": "Read code you didn't write. Paint the gaze on a file, navigate to the muscle, and follow the gaze through it — deterministic, local, nothing leaves your machine.",
+        "description": "Read code you didn't write. Paint the gaze on a file, navigate to the muscle, and watch the expert read — deterministic, local, nothing leaves your machine.",
         "steps": [
           {
             "id": "emit",
@@ -70,8 +70,8 @@
           },
           {
             "id": "play",
-            "title": "Watch the gaze walk the file",
-            "description": "Press the **▶** in the sidebar title (or **Option+] / Option+[** to step). A focus marker walks the file along the gaze — beacon, then each muscle block — skipping the tendon. That's the gaze, animated.",
+            "title": "Watch the expert read",
+            "description": "Press the **▶** in the sidebar title (or **Option+] / Option+[** to step). A focus marker walks the file in the expert's reading order — beacon, then each muscle block — skipping the tendon. That's the gaze, animated.",
             "media": { "markdown": "walkthrough/play.md" }
           },
           {

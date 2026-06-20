@@ -85,7 +85,7 @@ function paint(editor) {
   if (!enabled) { clear(editor); statusItem.hide(); return; }
   const root = rootFor(editor.document);
   if (!root) return;
-  if (!gaze || gazeRoot !== root) { if (!loadGaze(root)) { clear(editor); statusItem.text = "$(eye-closed) doloop: no gaze — run emit_gaze.py"; statusItem.show(); return; } }
+  if (!gaze || gazeRoot !== root) { if (!loadGaze(root)) { clear(editor); statusItem.text = "$(eye-closed) doloop: no gaze — run 'doloop gaze .'"; statusItem.show(); return; } }
   const rel = path.relative(root, editor.document.uri.fsPath).split(path.sep).join("/");
   const entry = gaze.files[rel];
   if (!entry) { clear(editor); statusItem.hide(); return; }
@@ -169,7 +169,7 @@ function stepFixation(d) {                                   // DIRECTION: step 
 function playGaze() {
   const ed = vscode.window.activeTextEditor; if (!ed) return;
   stopPlay(true);
-  if (!ensurePath(ed).length) { vscode.window.showInformationMessage("doloop: no gaze for this file (run emit_gaze.py?)."); return; }
+  if (!ensurePath(ed).length) { vscode.window.showInformationMessage("doloop: no gaze for this file — run 'doloop gaze .' (or 'doloop gaze . --watch')."); return; }
   playing = true;
   const start = (gazeIdx >= 0 && gazeIdx < gazePath.length - 1) ? gazeIdx + 1 : 0;   // resume from where you stepped
   let t = 0;
@@ -256,7 +256,7 @@ function activate(ctx) {
     const ed = vscode.window.activeTextEditor;
     const root = ed && rootFor(ed.document);
     if (root && loadGaze(root)) { paint(ed); vscode.window.showInformationMessage("doloop gaze reloaded (" + Object.keys(gaze.files).length + " files)."); }
-    else vscode.window.showWarningMessage("No .doloop/gaze.json here. Run: python3 emit_gaze.py <repo>");
+    else vscode.window.showWarningMessage("No .doloop/gaze.json here. Install: pip install doloopio — then run: doloop gaze . --watch");
   }));
   ctx.subscriptions.push(vscode.commands.registerCommand("doloop.toggleGaze", () => {
     enabled = !enabled; paint(vscode.window.activeTextEditor);
