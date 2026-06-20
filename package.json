@@ -1,0 +1,87 @@
+{
+  "name": "doloop-decorations",
+  "displayName": "doloop decorations",
+  "description": "Paint doloop's where-to-look gaze on the open file: beacon signatures, muscle decisions, the rest dimmed. Deterministic, local, non-invasive (decorates, never modifies).",
+  "version": "0.0.8",
+  "publisher": "doloop",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/ekras-doloop/doloop-decorations" },
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["Other"],
+  "main": "./extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "commands": [
+      { "command": "doloop.refreshGaze", "title": "doloop: Refresh gaze (reload .doloop/gaze.json)" },
+      { "command": "doloop.toggleGaze", "title": "doloop: Toggle gaze on/off" },
+      { "command": "doloop.jumpTo", "title": "doloop: Jump to" },
+      { "command": "doloop.playGaze", "title": "doloop: Play the gaze (the expert's scan path)", "icon": "$(play)" },
+      { "command": "doloop.stopGaze", "title": "doloop: Stop the gaze", "icon": "$(debug-stop)" },
+      { "command": "doloop.prevFixation", "title": "doloop: Previous fixation", "icon": "$(chevron-left)" },
+      { "command": "doloop.nextFixation", "title": "doloop: Next fixation", "icon": "$(chevron-right)" },
+      { "command": "doloop.cycleSpeed", "title": "doloop: Cycle gaze speed (0.5x / 1x / 2x)", "icon": "$(dashboard)" }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "doloop", "title": "doloop — where to look", "icon": "beacon.svg" }
+      ]
+    },
+    "views": {
+      "doloop": [
+        { "id": "doloopWhereToLook", "name": "Where to look" }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        { "command": "doloop.prevFixation", "when": "view == doloopWhereToLook", "group": "navigation@1" },
+        { "command": "doloop.playGaze", "when": "view == doloopWhereToLook", "group": "navigation@2" },
+        { "command": "doloop.stopGaze", "when": "view == doloopWhereToLook", "group": "navigation@3" },
+        { "command": "doloop.nextFixation", "when": "view == doloopWhereToLook", "group": "navigation@4" },
+        { "command": "doloop.cycleSpeed", "when": "view == doloopWhereToLook", "group": "navigation@5" }
+      ]
+    },
+    "keybindings": [
+      { "command": "doloop.nextFixation", "key": "alt+]", "when": "editorTextFocus || focusedView == doloopWhereToLook" },
+      { "command": "doloop.prevFixation", "key": "alt+[", "when": "editorTextFocus || focusedView == doloopWhereToLook" }
+    ],
+    "walkthroughs": [
+      {
+        "id": "doloopGettingStarted",
+        "title": "Get started with doloop",
+        "description": "Read code you didn't write. Paint the gaze on a file, navigate to the muscle, and watch the expert read — deterministic, local, nothing leaves your machine.",
+        "steps": [
+          {
+            "id": "emit",
+            "title": "Paint the gaze (CLI)",
+            "description": "In your repo, run **`doloop gaze .`** — it writes `.doloop/gaze.json`, the deterministic where-to-look map. Add **`--watch`** to keep it live as you code.\n\n[Open a terminal](command:workbench.action.terminal.new)",
+            "media": { "markdown": "walkthrough/emit.md" }
+          },
+          {
+            "id": "read",
+            "title": "Read a file",
+            "description": "Open any source file. doloop paints it: a **▶ beacon** where you enter, a **green bar** on the muscle (the decisions, where you dwell), everything else **dimmed** (the tendon you skip). Hover a line to learn why.",
+            "media": { "markdown": "walkthrough/read.md" }
+          },
+          {
+            "id": "navigate",
+            "title": "Find where to start",
+            "description": "Open the **doloop** view in the activity bar — the **Where to look** sidebar ranks files: **doors → engine room → vocabulary**. Click one to jump straight to its muscle, no scrolling.\n\n[Open Where to look](command:workbench.view.extension.doloop)",
+            "media": { "markdown": "walkthrough/navigate.md" }
+          },
+          {
+            "id": "play",
+            "title": "Watch the expert read",
+            "description": "Press the **▶** in the sidebar title (or **Option+] / Option+[** to step). A focus marker walks the file in the expert's reading order — beacon, then each muscle block — skipping the tendon. That's the gaze, animated.",
+            "media": { "markdown": "walkthrough/play.md" }
+          },
+          {
+            "id": "whole",
+            "title": "The whole product",
+            "description": "Two more surfaces: the **web cockpit** (paste any public repo at doloop-read.fly.dev → a map you recolor by lens), and **`doloop conventions --emit`** which teaches your AI your house style by writing it into `.cursor/rules` / `CLAUDE.md` / `AGENTS.md`.",
+            "media": { "markdown": "walkthrough/whole.md" }
+          }
+        ]
+      }
+    ]
+  }
+}
