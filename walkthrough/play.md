@@ -1,7 +1,7 @@
-### Watch the expert read
+### Watch the gaze walk the file
 
-The **▶ play** button (sidebar title) walks a focus marker through the file in
-the expert's reading order — beacon, then each muscle block, dwelling longer on
+The **▶ play** button (sidebar title) walks a focus marker through the file along
+the gaze — beacon, then each muscle block, dwelling longer on
 bigger blocks, skipping the tendon — scrolling to follow.
 
 - **Option+]** — next fixation
