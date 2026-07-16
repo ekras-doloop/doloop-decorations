@@ -1,8 +1,8 @@
 {
   "name": "doloop-decorations",
   "displayName": "doloop decorations",
-  "description": "Paint doloop's where-to-look gaze on the open file: beacon signatures, muscle decisions, the rest dimmed. Deterministic, local, non-invasive (decorates, never modifies).",
-  "version": "0.0.9",
+  "description": "Paint doloop's where-to-look gaze on the open file, plus the daily surface: your current work's blast radius, backbone reach, and house-law departures painted ambient in the editor. Deterministic, local, non-invasive (decorates, never modifies).",
+  "version": "0.1.0",
   "publisher": "doloop",
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/ekras-doloop/doloop-decorations" },
@@ -13,6 +13,7 @@
   "contributes": {
     "commands": [
       { "command": "doloop.refreshGaze", "title": "doloop: Refresh gaze (reload .doloop/gaze.json)" },
+      { "command": "doloop.refreshDaily", "title": "doloop: Refresh daily (reload .doloop/daily.json)" },
       { "command": "doloop.toggleGaze", "title": "doloop: Toggle gaze on/off" },
       { "command": "doloop.jumpTo", "title": "doloop: Jump to" },
       { "command": "doloop.playGaze", "title": "doloop: Play the gaze (the structural scan path)", "icon": "$(play)" },

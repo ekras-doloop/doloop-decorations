@@ -190,6 +190,116 @@ function cycleSpeed() {
   else if (gazeIdx >= 0) { const ed = vscode.window.activeTextEditor; if (ed) showFixation(ed, gazeIdx); }
 }
 
+// ── THE DAILY SURFACE (A1–A4) — ambient comprehension of your CURRENT WORK ──────────────────────
+// Reads .doloop/daily.json (emitted by `doloop daily --emit`): the branch delta, each changed file
+// with its blast, load-bearing flag, backbone reach, and house-law departures INSIDE the diff.
+// AMBIENT + READ-ONLY: painting never advances the daily window (that's the CLI's --mark, not here).
+// Coexists with the gaze layer above; both decorate, neither modifies. Every string is measured fact
+// except merge_color; no 'fix'/'should'/'bug'.
+let departureDeco, dailyStatus, diagColl, dailyLensEmitter;
+let daily = null, dailyRoot = null;
+
+function loadDaily(root) {
+  try {
+    const p = path.join(root, ".doloop", "daily.json");
+    if (fs.existsSync(p)) {
+      const m = JSON.parse(fs.readFileSync(p, "utf8"));
+      const byPath = {};
+      for (const f of (m.files || [])) byPath[f.path] = f;
+      daily = { model: m, byPath }; dailyRoot = root;
+      if (dailyLensEmitter) dailyLensEmitter.fire();
+      return true;
+    }
+  } catch (e) { /* fall through */ }
+  daily = null; dailyRoot = null; if (dailyLensEmitter) dailyLensEmitter.fire(); return false;
+}
+
+function relOf(root, doc) { return path.relative(root, doc.uri.fsPath).split(path.sep).join("/"); }
+
+function updateDailyStatus() {
+  if (!dailyStatus) return;
+  if (!daily) { dailyStatus.hide(); return; }
+  const t = daily.model.totals || {};
+  dailyStatus.text = "$(git-branch) daily · R" + (t.red || 0) + " Y" + (t.yellow || 0) + " G" + (t.green || 0)
+    + " · " + (t.departures || 0) + " dep";
+  dailyStatus.tooltip = new vscode.MarkdownString(
+    "**doloop daily** — your current work vs HEAD.\n\n" + (daily.model.totals.changed || 0)
+    + " changed files · " + (t.departures || 0) + " departures in the diff.\n\n_" + (daily.model.note || "") + "_");
+  dailyStatus.show();
+}
+
+// A1 (gutter glyph + hover card) and A3 (Problems INFO diagnostics) — painted for the active file.
+function paintDaily(editor) {
+  if (!editor || !departureDeco) return;
+  const root = rootFor(editor.document);
+  if (!root) { editor.setDecorations(departureDeco, []); return; }
+  if (!daily || dailyRoot !== root) loadDaily(root);
+  updateDailyStatus();
+  if (!daily) { editor.setDecorations(departureDeco, []); diagColl.delete(editor.document.uri); return; }
+  const f = daily.byPath[relOf(root, editor.document)];
+  const deps = (f && f.departures) || [];
+  if (!deps.length) { editor.setDecorations(departureDeco, []); diagColl.delete(editor.document.uri); return; }
+  const decos = [], diags = [];
+  for (const d of deps) {
+    const ln = Math.max(0, (d.line || 1) - 1);
+    const md = new vscode.MarkdownString(
+      "**△ doloop · departure** — " + d.say + "\n\n`" + d.rule + "` · " + d.population
+      + "\n\n_A convention the rest of the repo already keeps. The deviation is measured fact — not a bug, not a fix._");
+    decos.push({ range: new vscode.Range(ln, 0, ln, 0), hoverMessage: md });
+    const diag = new vscode.Diagnostic(
+      new vscode.Range(ln, 0, ln, Number.MAX_SAFE_INTEGER),
+      d.say + "  (" + d.rule + " · " + d.population + ")",
+      vscode.DiagnosticSeverity.Information);      // INFO only — Error/Warning would make this a linter
+    diag.source = "doloop"; diags.push(diag);
+  }
+  editor.setDecorations(departureDeco, decos);
+  diagColl.set(editor.document.uri, diags);
+}
+
+// A4 — CodeLens on a load-bearing changed file: how much of the repo leans on it.
+class LoadBearingLens {
+  constructor() { dailyLensEmitter = new vscode.EventEmitter(); this.onDidChangeCodeLenses = dailyLensEmitter.event; }
+  provideCodeLenses(document) {
+    const root = rootFor(document); if (!root) return [];
+    if (!daily || dailyRoot !== root) loadDaily(root);
+    const f = daily && daily.byPath[relOf(root, document)];
+    if (!f || !f.load_bearing) return [];
+    const title = "doloop · " + f.blast + " file" + (f.blast === 1 ? "" : "s") + " depend on this"
+      + (f.in_spine ? " · backbone" : "");
+    return [new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), { title, command: "" })];
+  }
+}
+
+function activateDaily(ctx) {
+  departureDeco = vscode.window.createTextEditorDecorationType({   // A1: gutter triangle on the departure line
+    gutterIconPath: vscode.Uri.file(path.join(ctx.extensionPath, "departure.svg")), gutterIconSize: "contain",
+    overviewRulerColor: "rgba(176,0,32,0.9)", overviewRulerLane: vscode.OverviewRulerLane.Left,
+  });
+  dailyStatus = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);  // A2: risk strip (right)
+  dailyStatus.command = "doloop.refreshDaily";
+  diagColl = vscode.languages.createDiagnosticCollection("doloop");                       // A3: Problems (INFO)
+  ctx.subscriptions.push(departureDeco, dailyStatus, diagColl);
+  ctx.subscriptions.push(vscode.languages.registerCodeLensProvider({ scheme: "file" }, new LoadBearingLens()));  // A4
+  ctx.subscriptions.push(vscode.commands.registerCommand("doloop.refreshDaily", () => {
+    const ed = vscode.window.activeTextEditor;
+    const root = ed && rootFor(ed.document);
+    if (root && loadDaily(root)) { paintDaily(ed); vscode.window.showInformationMessage(
+      "doloop daily reloaded (" + (daily.model.totals.changed || 0) + " changed files)."); }
+    else vscode.window.showWarningMessage("No .doloop/daily.json here. Run: doloop daily --emit");
+  }));
+  const watcher = vscode.workspace.createFileSystemWatcher("**/.doloop/daily.json");
+  const onDaily = () => {
+    const ed = vscode.window.activeTextEditor;
+    const root = ed && rootFor(ed.document);
+    if (root && loadDaily(root)) paintDaily(ed);
+  };
+  watcher.onDidChange(onDaily); watcher.onDidCreate(onDaily); watcher.onDidDelete(onDaily);
+  ctx.subscriptions.push(watcher);
+  const wf0 = (vscode.workspace.workspaceFolders || [])[0];
+  if (wf0) loadDaily(wf0.uri.fsPath);
+  paintDaily(vscode.window.activeTextEditor);
+}
+
 function activate(ctx) {
   muscleDeco = vscode.window.createTextEditorDecorationType({
     isWholeLine: true, backgroundColor: "rgba(92,122,74,0.13)",
@@ -223,7 +333,7 @@ function activate(ctx) {
     }), () => vscode.window.showWarningMessage("doloop: couldn't open " + rel));
   }));
 
-  ctx.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((ed) => { stopPlay(); paint(ed); }));
+  ctx.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((ed) => { stopPlay(); paint(ed); paintDaily(ed); }));
   ctx.subscriptions.push(vscode.commands.registerCommand("doloop.playGaze", playGaze));
   ctx.subscriptions.push(vscode.commands.registerCommand("doloop.stopGaze", () => stopPlay()));
   ctx.subscriptions.push(vscode.commands.registerCommand("doloop.nextFixation", () => stepFixation(1)));
@@ -251,7 +361,7 @@ function activate(ctx) {
       return new vscode.Hover(md);
     },
   }));
-  ctx.subscriptions.push(vscode.workspace.onDidOpenTextDocument(() => paint(vscode.window.activeTextEditor)));
+  ctx.subscriptions.push(vscode.workspace.onDidOpenTextDocument(() => { paint(vscode.window.activeTextEditor); paintDaily(vscode.window.activeTextEditor); }));
   ctx.subscriptions.push(vscode.commands.registerCommand("doloop.refreshGaze", () => {
     const ed = vscode.window.activeTextEditor;
     const root = ed && rootFor(ed.document);
@@ -278,6 +388,7 @@ function activate(ctx) {
   ctx.subscriptions.push(watcher);
 
   paint(vscode.window.activeTextEditor);
+  activateDaily(ctx);                                        // the daily surface (A1–A4), alongside the gaze layer
 }
 
 function deactivate() {}
